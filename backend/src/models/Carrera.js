@@ -1,13 +1,11 @@
-const { DataTypes } = require('sequelize');
-
-module.exports = (sequelize) => {
-  const Carrera = sequelize.define('Carrera', {
+module.exports = (sequelize, DataTypes) => {
+  return sequelize.define('Carrera', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
-    nombre: {
+    nombreCarrera: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -15,6 +13,4 @@ module.exports = (sequelize) => {
     tableName: 'carreras',
     timestamps: false,
   });
-
-  return Carrera;
 };

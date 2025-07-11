@@ -1,125 +1,115 @@
+// 🔧 src/pages/CarrerasPage.jsx
 import { useEffect, useState } from 'react';
+import axios from 'axios';
 import {
-  Container,
-  Typography,
-  Button,
-  IconButton,
-  Box,
-  Paper,
-  Grid,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  TextField,
-  DialogActions,
+  Box, Button, Dialog, DialogActions, DialogContent, DialogTitle,
+  IconButton, TextField, Typography, Paper, List, ListItem, ListItemText
 } from '@mui/material';
-import { Delete, Edit } from '@mui/icons-material';
-import api from '../api/axios';
+import { Edit, Delete } from '@mui/icons-material';
+import MainLayout from '../layout/MainLayout';
 
 const CarrerasPage = () => {
   const [carreras, setCarreras] = useState([]);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [nombreCarrera, setNombreCarrera] = useState('');
-  const [editId, setEditId] = useState(null);
-
-  useEffect(() => {
-    fetchCarreras();
-  }, []);
+  const [open, setOpen] = useState(false);
+  const [nombre, setNombre] = useState('');
+  const [editingId, setEditingId] = useState(null);
 
   const fetchCarreras = async () => {
     try {
-      const res = await api.get('/carreras');
+      const res = await axios.get('http://localhost:4000/carreras');
       setCarreras(res.data);
     } catch (err) {
       console.error('Error al obtener carreras:', err);
     }
   };
 
-  const openModalCrear = () => {
-    setEditId(null);
-    setNombreCarrera('');
-    setModalOpen(true);
+  useEffect(() => {
+    fetchCarreras();
+  }, []);
+
+  const handleOpen = (id = null, nombre = '') => {
+    setEditingId(id);
+    setNombre(nombre);
+    setOpen(true);
   };
 
-  const openModalEditar = (carrera) => {
-    setEditId(carrera.id);
-    setNombreCarrera(carrera.nombreCarrera);
-    setModalOpen(true);
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await api.delete(`/carreras/${id}`);
-      fetchCarreras();
-    } catch (err) {
-      console.error('Error al borrar carrera:', err);
-    }
+  const handleClose = () => {
+    setOpen(false);
+    setNombre('');
+    setEditingId(null);
   };
 
   const handleSubmit = async () => {
     try {
-      if (editId) {
-        await api.put(`/carreras/${editId}`, { nombreCarrera });
+      if (editingId) {
+        await axios.put(`http://localhost:4000/carreras/${editingId}`, { nombre });
       } else {
-        await api.post('/carreras', { nombreCarrera });
+        await axios.post('http://localhost:4000/carreras', { nombre });
       }
-      setModalOpen(false);
       fetchCarreras();
+      handleClose();
     } catch (err) {
       console.error('Error al guardar carrera:', err);
     }
   };
 
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:4000/carreras/${id}`);
+      fetchCarreras();
+    } catch (err) {
+      console.error('Error al eliminar carrera:', err);
+    }
+  };
+
   return (
-    <Container sx={{ mt: 4 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Carreras</Typography>
-        <Button variant="contained" color="primary" onClick={openModalCrear}>
-          Crear Carrera
-        </Button>
-      </Box>
+    <MainLayout>
+      <Box p={3}>
+        <Typography variant="h4" gutterBottom>Carreras</Typography>
+        <Button variant="contained" onClick={() => handleOpen()}>Crear carrera</Button>
 
-      {carreras.map((carrera) => (
-        <Paper key={carrera.id} sx={{ p: 2, mb: 2 }}>
-          <Grid container alignItems="center" justifyContent="space-between">
-            <Grid item>
-              <Typography>{carrera.nombreCarrera}</Typography>
-            </Grid>
-            <Grid item>
-              <IconButton color="primary" onClick={() => openModalEditar(carrera)}>
-                <Edit />
-              </IconButton>
-              <IconButton color="error" onClick={() => handleDelete(carrera.id)}>
-                <Delete />
-              </IconButton>
-            </Grid>
-          </Grid>
+        <Paper sx={{ mt: 2 }}>
+          <List>
+            {carreras.map((carrera) => (
+              <ListItem
+                key={carrera.id}
+                secondaryAction={
+                  <>
+                    <IconButton onClick={() => handleOpen(carrera.id, carrera.nombreCarrera)}>
+                      <Edit />
+                    </IconButton>
+                    <IconButton onClick={() => handleDelete(carrera.id)}>
+                      <Delete />
+                    </IconButton>
+                  </>
+                }
+              >
+                <ListItemText primary={carrera.nombreCarrera} />
+              </ListItem>
+            ))}
+          </List>
         </Paper>
-      ))}
 
-      {/* Modal para crear/editar */}
-      <Dialog open={modalOpen} onClose={() => setModalOpen(false)}>
-        <DialogTitle>{editId ? 'Editar Carrera' : 'Crear Carrera'}</DialogTitle>
-        <DialogContent>
-          <TextField
-            label="Nombre de la Carrera"
-            fullWidth
-            value={nombreCarrera}
-            onChange={(e) => setNombreCarrera(e.target.value)}
-            autoFocus
-            margin="normal"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setModalOpen(false)}>Cancelar</Button>
-          <Button variant="contained" onClick={handleSubmit}>
-            Guardar
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+        <Dialog open={open} onClose={handleClose}>
+          <DialogTitle>{editingId ? 'Editar carrera' : 'Nueva carrera'}</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              fullWidth
+              label="Nombre"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              sx={{ mt: 1 }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose}>Cancelar</Button>
+            <Button onClick={handleSubmit} variant="contained">Guardar</Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </MainLayout>
   );
 };
 
 export default CarrerasPage;
-

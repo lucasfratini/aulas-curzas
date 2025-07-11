@@ -1,4 +1,4 @@
-const { Sequelize } = require('sequelize');
+const { Sequelize, DataTypes } = require('sequelize');
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
@@ -19,20 +19,19 @@ const db = {};
 
 const basename = path.basename(__filename);
 
+// Cargar todos los modelos automáticamente
 fs.readdirSync(__dirname)
   .filter((file) =>
     file.endsWith('.js') &&
     file !== basename
   )
   .forEach((file) => {
-    const model = require(path.join(__dirname, file))(sequelize);
+    const model = require(path.join(__dirname, file))(sequelize, DataTypes);
     db[model.name] = model;
   });
-
-// Relacionar modelos si es necesario acá
-// Por ejemplo: db.Aula.belongsTo(db.Docente);
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
 module.exports = db;
+
